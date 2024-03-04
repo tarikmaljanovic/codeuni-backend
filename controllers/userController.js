@@ -113,6 +113,23 @@ const UserController = {
         } catch (error) {
             res.status(500).json({error: error.message})
         }
+    },
+
+    editUser: async (req, res) => {
+        try {
+            const user = await User.findByPk(req.params.id)
+            if(!user) {
+                return res.status(404).json({error: 'User not found'})
+            }
+            user.first_name = req.body.first_name
+            user.last_name = req.body.last_name
+            user.email = req.body.email
+            user.password_hash = CryptoJS.SHA256(req.body.password).toString()
+            await user.save()
+            res.json(user)
+        } catch (error) {
+            res.status(500).json({error: error.message})
+        }
     }
 }
 

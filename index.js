@@ -6,6 +6,7 @@ import courseRoutes from './routes/courseRoutes.js'
 import badgeRoutes from './routes/badgeRoutes.js'
 import lessonRoutes from './routes/lessonRoutes.js'
 import projectRoutes from './routes/projectRoutes.js'
+import quizRoutes from './routes/quizRoutes.js'
 
 const app = express()
 const port = process.env.PORT || 8000
@@ -17,6 +18,7 @@ app.use('/courses', courseRoutes)
 app.use('/badges', badgeRoutes)
 app.use('/lessons', lessonRoutes)
 app.use('/projects', projectRoutes)
+app.use('/quizzes', quizRoutes)
 
 app.get('/', (req, res) => {
     sequelize.authenticate()

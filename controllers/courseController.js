@@ -134,17 +134,28 @@ const CourseController = {
 
     favouriteCourse: async (req, res) => {
         try {
-            const userCourse = await UserCourse.findOne({
+            const userCourse = await UserCourse.findOrCreate({
                 where: {
                     user_id: req.body.user_id,
                     course_id: req.body.course_id
+                },
+                defaults: {
+                    progress: 0,
+                    certificate: false,
+                    user_id: req.body.user_id,
+                    course_id: req.body.course_id,
+                    starred: true
                 }
+            }).then(([userCourse, created]) => {
+                if(!created) {
+                    userCourse.update({starred: req.body.favorite})
+                }
+                return userCourse
+            }).then(userCourse => {
+                return userCourse
             })
-            if(!userCourse) {
-                res.status(404).json({error: 'Course not found'})
-            } 
-            await userCourse.update({starred: req.body.favorite})
-            res.json({message: 'Favourite updated', starred: userCourse.starred})
+
+            res.json(userCourse)
         } catch (error) {
             res.status(500).json({error: error.message})
         }
