@@ -160,6 +160,103 @@ const CourseController = {
             res.status(500).json({error: error.message})
         }
     },
+
+    updateProgress: async (req, res) => {
+        try {
+            const numberOfLessons = await Lesson.count({
+                where: {
+                    course_id: req.body.course_id
+                }
+            })
+
+            const numberOfProjects = await Project.count({
+                where: {
+                    course_id: req.body.course_id
+                }
+            })
+
+            const total = parseInt(numberOfLessons) + parseInt(numberOfProjects);
+
+            let userCourse = await UserCourse.findOrCreate({
+                where: {
+                    user_id: req.body.user_id,
+                    course_id: req.body.course_id
+                },
+                defaults: {
+                    progress: 0,
+                    certificate: false,
+                    user_id: req.body.user_id,
+                    course_id: req.body.course_id,
+                    completed_lessons: '',
+                    completed_projects: ''
+                }
+            }).then(([userCourse, created]) => {
+                return userCourse
+            }).then(userCourse => {
+                return userCourse
+            })
+
+            let completedLessons = userCourse.completed_lessons
+            let completedProjects = userCourse.completed_projects
+
+            if(req.body.type === 'lesson') {
+                if(completedLessons != '' && completedLessons != null) {
+                    completedLessons = completedLessons.split(',')
+                } else {
+                    completedLessons = []
+                }
+                if(completedLessons.includes(req.body.lesson_id + "")) {
+                    return res.json({message: 'Lesson already completed'})
+                }
+                completedLessons.push(req.body.lesson_id)
+                UserCourse.update({
+                    completed_lessons: completedLessons.join(','),
+                    progress: userCourse.progress + (1 / total)
+                }, {
+                    where: {
+                        user_id: req.body.user_id,
+                        course_id: req.body.course_id
+                    }
+                })
+            } else {
+                if(completedProjects != '' && completedProjects != null) {
+                    completedProjects = completedProjects.split(',')
+                } else {
+                    completedProjects = []
+                }
+                if(completedProjects.includes(req.body.project_id + "")) {
+                    return res.json({message: 'Project already completed'})
+                }
+                completedProjects.push(req.body.project_id)
+                UserCourse.update({
+                    completed_projects: completedProjects.join(','),
+                    progress: userCourse.progress + (1 / total)
+                }, {
+                    where: {
+                        user_id: req.body.user_id,
+                        course_id: req.body.course_id
+                    }
+                })
+            }
+
+            if(userCourse.progress + (1 / total) == 1) {
+                UserCourse.update({
+                    certificate: true
+                }, {
+                    where: {
+                        user_id: req.body.user_id,
+                        course_id: req.body.course_id
+                    }
+                })
+            }
+
+            res.json({message: 'Progress updated'})
+
+
+        } catch (error) {
+            res.status(500).json({error: error.message})
+        }
+    }
 }
 
 export default CourseController;

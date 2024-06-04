@@ -10,5 +10,6 @@ router.post('/createCourse', CourseController.createCourse);
 router.put('/favoriteCourse', CourseController.favouriteCourse);
 router.put('/updateCourse/:id', CourseController.editCourse);
 router.put('/deleteCourse/:id', CourseController.deleteCourse);
+router.put('/updateProgress', CourseController.updateProgress);
 
 export default router;

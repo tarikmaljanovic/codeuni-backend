@@ -1,4 +1,4 @@
-import { DataTypes } from 'sequelize'
+import { DATE, DataTypes } from 'sequelize'
 import sequelize from '../sequelize.js'
 import User from './User.js'
 import Course from './Course.js'
@@ -32,6 +32,12 @@ const UserCourse = sequelize.define('UserCours', {
         type: DataTypes.BOOLEAN,
         allowNull: false,
     },
+    completed_lessons: {
+        type: DataTypes.TEXT
+    },
+    completed_projects: {
+        type: DataTypes.TEXT
+    }
 }, {
     createdAt: false,
     updatedAt: false,
