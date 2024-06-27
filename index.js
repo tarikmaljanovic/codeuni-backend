@@ -7,8 +7,11 @@ import badgeRoutes from './routes/badgeRoutes.js'
 import lessonRoutes from './routes/lessonRoutes.js'
 import projectRoutes from './routes/projectRoutes.js'
 import quizRoutes from './routes/quizRoutes.js'
+import bodyParser from 'body-parser'
+import puppeteer from 'puppeteer'
 
 const app = express()
+app.use(bodyParser.json());
 const port = process.env.PORT || 8000
 
 app.use(cors())

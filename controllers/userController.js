@@ -4,11 +4,27 @@ import UserBadge from '../models/UserBadges.js'
 import CryptoJS from 'crypto-js'
 import { generateToken } from '../jwt.js'
 import sequelize from '../sequelize.js'
+import puppeteer from 'puppeteer'
+import bodyParser from 'body-parser'
+import { verifyToken } from '../jwt.js'
 
 User.belongsTo(UserBadge, {foreignKey: 'id', targetKey: 'user_id'})
 User.belongsTo(UserCourse, {foreignKey: 'id', targetKey: 'user_id'})
 
 const UserController = {
+    getAllStudents: async (req, res) => {
+        try { 
+            const users = await User.findAll({
+                where: {
+                    admin: false
+                }
+            })
+            res.json(users)
+        } catch (error) {
+            res.status(500).json({error: error.message})
+        }
+    },
+
     getById: async (req, res) => {
         try {
             const user = await User.findByPk(req.params.id)
@@ -31,6 +47,9 @@ const UserController = {
             })
             if(!user) {
                 return res.status(404).json({error: 'User not found'})
+            }
+            if(user.disabled) {
+                return res.status(403).json({error: 'User is disabled'})
             }
             user.password_hash = undefined
 
@@ -127,6 +146,171 @@ const UserController = {
             user.password_hash = CryptoJS.SHA256(req.body.password).toString()
             await user.save()
             res.json(user)
+        } catch (error) {
+            res.status(500).json({error: error.message})
+        }
+    },
+
+    sendEmail: async (req, res) => {
+        nodemailer.createTransport({
+            host: 'smtp.gmail.com',
+            secure: false,
+            port: 587,
+            auth: {
+                user: process.env.EMAIL_USER,
+                pass: process.env.EMAIL_PASS,
+            }
+        }).sendMail({
+            from: 'codeuni23@gmail.com',
+            to: 'tarikmaljanovic123@gmail.com',
+            subject: 'CodeUni Certificate',
+            html: '<p>Congratulations! You have earned a certificate from CodeUni.</p>'
+        }).then(() => {
+            res.json({message: 'Email sent'})
+        }).catch((error) => {
+            res.status(500).json({error: error.message})
+        })
+    },
+
+    downloadCertificate: async (req, res) => {
+        try {
+            const browser = await puppeteer.launch()
+            const page = await browser.newPage()
+            await page.setContent(`
+                    <!DOCTYPE html>
+                    <html>
+                        <head>
+                            <style type='text/css'>
+                                body, html {
+                                    margin: 0;
+                                    padding: 0;
+                                }
+                                body {
+                                    color: black;
+                                    display: table;
+                                    font-family: Georgia, serif;
+                                    font-size: 24px;
+                                    text-align: center;
+                                    width: 100%;
+                                    height: 100vh;
+                                    overflow: hidden;
+                                }
+                                .container {
+                                    border: 20px solid #5186db;
+                                    width: calc(297mm - 40px);
+                                    height: calc(210mm - 40px);
+                                    display: table-cell;
+                                    vertical-align: middle;
+                                }
+                                .logo {
+                                    color: #5186db;
+                                }
+                                .marquee {
+                                    color: #5186db;
+                                    font-size: 48px;
+                                    margin: 20px;
+                                }
+                                .assignment {
+                                    margin: 20px;
+                                }
+                                .person {
+                                    border-bottom: 2px solid black;
+                                    font-size: 32px;
+                                    font-style: italic;
+                                    margin: 20px auto;
+                                    width: 400px;
+                                }
+                                .reason {
+                                    margin: 20px;
+                                }
+                            </style>
+                        </head>
+                        <body>
+                            <div class="container">
+                                <div class="logo">
+                                    CodeUni
+                                </div>
+
+                                <div class="marquee">
+                                    Certificate of Completion
+                                </div>
+
+                                <div class="assignment">
+                                    This certificate is presented to
+                                </div>
+
+                                <div class="person">
+                                    ${req.body.first_name} ${req.body.last_name}
+                                </div>
+
+                                <div class="reason">
+                                    For deftly completing the ${req.body.course_title} course<br/>
+                                </div>
+                            </div>
+                        </body>
+                    </html>
+                `)
+                const pdfBuffer = await page.pdf({
+                    format: 'A4',
+                    printBackground: true,
+                    landscape: true
+                })
+
+                await browser.close()
+
+                res.set({
+                    'Content-Type': 'application/pdf',
+                    'Content-Disposition': 'attachment; filename=generated.pdf',
+                    'Content-Length': pdfBuffer.length,
+                });
+        
+                res.send(pdfBuffer);
+        } catch (error) {
+            res.status(500).json({error: error.message})
+        }
+    },
+
+    disableAccount: async (req, res) => {
+        try {
+            if(verifyToken(req.body.token).admin === false) {
+                return res.status(403).json({error: 'Unauthorized'})
+            }
+
+            const user = await User.findByPk(req.body.user_id)
+
+            if(!user) {
+                return res.status(404).json({error: 'User not found'})
+            }
+
+            user.disabled = true
+
+            await user.save()
+
+            res.json(user)
+
+        } catch (error) {
+            res.status(500).json({error: error.message})
+        }
+    },
+
+    enableAccount: async (req, res) => {
+        try {
+            if(verifyToken(req.body.token).admin === false) {
+                return res.status(403).json({error: 'Unauthorized'})
+            }
+
+            const user = await User.findByPk(req.body.user_id)
+
+            if(!user) {
+                return res.status(404).json({error: 'User not found'})
+            }
+
+            user.disabled = false
+
+            await user.save()
+
+            res.json(user)
+
         } catch (error) {
             res.status(500).json({error: error.message})
         }
