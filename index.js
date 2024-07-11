@@ -15,7 +15,7 @@ configDotenv()
 
 const app = express()
 app.use(bodyParser.json());
-const port = process.env.PORT || 8000
+const port = 8000
 
 app.use(cors())
 app.use(express.json())
