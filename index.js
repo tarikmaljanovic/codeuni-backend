@@ -9,6 +9,9 @@ import projectRoutes from './routes/projectRoutes.js'
 import quizRoutes from './routes/quizRoutes.js'
 import bodyParser from 'body-parser'
 import puppeteer from 'puppeteer'
+import { configDotenv } from 'dotenv'
+
+configDotenv()
 
 const app = express()
 app.use(bodyParser.json());
