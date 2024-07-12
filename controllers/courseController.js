@@ -188,7 +188,8 @@ const CourseController = {
                     user_id: req.body.user_id,
                     course_id: req.body.course_id,
                     completed_lessons: '',
-                    completed_projects: ''
+                    completed_projects: '',
+                    starred: false
                 }
             }).then(([userCourse, created]) => {
                 return userCourse
