@@ -1,0 +1,39 @@
+version: '3.8'
+
+services:
+  server:
+    build: 
+      context: .
+    environment:
+      - NODE_ENV=development
+      - DB_HOST=db
+      - DB_USER=root
+      - DB_PASS=stardust
+      - DB_SCHEMA=codeuni
+      - DB_PORT=3306
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
+    develop:
+      volumes:
+        - .:/usr/src/app
+      watch:
+        - path: ./package.json
+          action: rebuild
+        - path: ./
+          target: /usr/src/app
+          action: sync
+    volumes:
+      - .:/usr/src/app
+
+  db:
+    image: mysql:8
+    restart: always
+    volumes:
+      - db-data:/var/lib/mysql
+    expose:
+      - "3306"
+
+volumes:
+  db-data:

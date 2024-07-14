@@ -7,7 +7,7 @@
   "scripts": {
     "test": "",
     "start": "node index.js",
-    "dev": "nodemon --env-file=.env index.js"
+    "dev": "nodemon index.js"
   },
   "author": "",
   "license": "ISC",
